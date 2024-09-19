@@ -65,7 +65,7 @@ class FreeProxySpider(scrapy.Spider):
         """ Отправляет полученные прокси в форму чанками по 10 штук
         и получает save_id для каждого чанка. """
         while len(self.all_proxies) > 2:
-            cookie = requests.get('https://test-rg8.ddns.net/api/get_token').headers.get('set-cookie')
+            random.shuffle(self.all_proxies)
             proxies = [self.all_proxies.pop(0) for _ in range(min(10, len(self.all_proxies)))]
             json_data = {
                 'user_id': self.token,
@@ -73,26 +73,56 @@ class FreeProxySpider(scrapy.Spider):
                 'proxies': ', '.join(proxies)
             }
 
-            response = requests.post(
-                url='https://test-rg8.ddns.net/api/post_proxies',
-                headers={
-                    'User-Agent': random.choice(USER_AGENTS),
-                    'Content-Type': 'application/json',
-                    'Referer': 'https://test-rg8.ddns.net/task',
-                    'Cookie': f'{cookie}'
-                },
-                data=json.dumps(json_data),
-            )
-            json_response = response.json()
-            save_id = json_response.get('save_id')
-            if save_id:
-                self.result[save_id] = proxies
-            else:
+            save_id = None
+            request_proxies = proxies + [None]
+            for proxy in request_proxies:
+                if proxy:
+                    proxy = {'http': f'http://{proxy}'}
+
+                try:
+                    save_id = self.upload_request(json_data, proxy)
+                except:
+                    continue
+
+                if save_id:
+                    self.result[save_id] = proxies
+                    break
+
+            if not save_id:
                 self.all_proxies += proxies
-            if len(self.all_proxies) > 2:
-                time.sleep(random.randint(5, 10))
+
 
         self.save_results()
+
+    def upload_request(self, json_data, proxy):
+        timeout = None
+        if proxy:
+            timeout = 3
+
+        cookie = requests.get(
+            'https://test-rg8.ddns.net/api/get_token',
+            proxies=proxy,
+            timeout=timeout
+        ).headers.get('set-cookie')
+        if not cookie:
+            return None
+
+        time.sleep(5)
+
+        save_id = requests.post(
+            url='https://test-rg8.ddns.net/api/post_proxies',
+            headers={
+                'User-Agent': random.choice(USER_AGENTS),
+                'Content-Type': 'application/json',
+                'Referer': 'https://test-rg8.ddns.net/task',
+                'Cookie': f'{cookie}'
+            },
+            data=json.dumps(json_data),
+            proxies=proxy,
+            timeout=timeout
+        ).json().get('save_id')
+
+        return save_id
 
     def save_results(self):
         """ Сохраняет результаты. """
