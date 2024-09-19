@@ -41,8 +41,10 @@ class FreeProxySpider(scrapy.Spider):
     def parse(self, response, **kwargs):
         rows = response.css('table#proxy_list tbody tr')
         for row in rows:
-            encoded_ip = row.xpath('//script[contains(text(),"Base64.decode")]/text()').get()
-            string = re.search(r'Base64\.decode\("([^"]+)"\)', encoded_ip).group(1)
+            script_content = row.xpath('.//script[contains(text(),"Base64.decode")]/text()').get()
+            if not script_content:
+                continue
+            string = re.search(r'Base64\.decode\("([^"]+)"\)', script_content).group(1)
             proxy_ip = base64.b64decode(string).decode('utf-8')
             proxy_port = row.css('span.fport::text').get()
 
@@ -91,7 +93,6 @@ class FreeProxySpider(scrapy.Spider):
             if not save_id:
                 self.all_proxies += proxies
 
-
         self.save_results()
 
     def upload_request(self, json_data, proxy):
@@ -107,7 +108,7 @@ class FreeProxySpider(scrapy.Spider):
         if not cookie:
             return None
 
-        time.sleep(5)
+        time.sleep(random.randint(5, 10))
 
         save_id = requests.post(
             url='https://test-rg8.ddns.net/api/post_proxies',
