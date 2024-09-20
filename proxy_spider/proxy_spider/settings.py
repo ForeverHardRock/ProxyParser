@@ -20,20 +20,11 @@ NEWSPIDER_MODULE = "proxy_spider.spiders"
 # env
 TOKEN = os.getenv('TOKEN')
 
-# anti-detect
-DOWNLOAD_DELAY = 3
-RANDOMIZE_DOWNLOAD_DELAY = True
-CONCURRENT_REQUESTS = 1
-AUTOTHROTTLE_ENABLED = True
-AUTOTHROTTLE_START_DELAY = 5
-AUTOTHROTTLE_MAX_DELAY = 60
-AUTOTHROTTLE_TARGET_CONCURRENCY = 1
-
-RETRY_ENABLED = False
-RETRY_TIMES = 3
-RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 403, 404]
+DOWNLOAD_TIMEOUT = 3
 
 COOKIES_ENABLED = True
+RETRY_ENABLED = False
+REACTOR_THREADPOOL_MAXSIZE = 30
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "proxy_spider (+http://www.yourdomain.com)"
@@ -42,15 +33,15 @@ COOKIES_ENABLED = True
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 30
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
-#CONCURRENT_REQUESTS_PER_DOMAIN = 16
-#CONCURRENT_REQUESTS_PER_IP = 16
+CONCURRENT_REQUESTS_PER_DOMAIN = 30
+CONCURRENT_REQUESTS_PER_IP = 30
 
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
@@ -111,5 +102,6 @@ ROBOTSTXT_OBEY = False
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
-TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+# TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+TWISTED_REACTOR  = 'twisted.internet.selectreactor.SelectReactor'
 FEED_EXPORT_ENCODING = "utf-8"
